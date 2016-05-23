@@ -1,2 +1,2 @@
 # zabbix-powercom-bnt
-Templates and agent files to monitor Powercom BNT-xxx UPS series
+Zabbix templates and agent files to monitor Powercom BNT-xxx UPS series
