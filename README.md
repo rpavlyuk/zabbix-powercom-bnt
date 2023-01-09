@@ -1,5 +1,5 @@
 # zabbix-powercom-bnt
-Zabbix templates and agent files to monitor Powercom BNT-xxx UPS series
+Zabbix templates and agent files to monitor Powercom BNT-xxx UPS series. However, it can be used to (nearly) any type of NUT-connected UPS as soon as you're not going to monitor some very specific parameters.
 
 ## Solution
 The template allows to monitor core UPS parameters:
@@ -8,18 +8,23 @@ The template allows to monitor core UPS parameters:
 * Battey Charge level (%)
 * Load level (%) 
 
-Access to Powercom UPS device is made via [Network UPS Tools / NUT] (http://networkupstools.org) client. This means that NUT CLient `upsc` has to be installed on the box where Zabbix Agent is running.
+Access to UPS device is made via [Network UPS Tools / NUT] (http://networkupstools.org) client. This means that NUT CLient `upsc` has to be installed on the box where Zabbix Agent is running.
 
 Template also has two graphs built-in:
 * AC Voltage
 * UPS Load
 
+**NOTE:** Starting from Zabbix v5.x classic charts will not work correctly when building the dashboard. Most likely, you will need to manually create those. 
+
 ## Supported Hardware
 * Powercom BNT-xxx
+* Any USB-connected UPS supported by NUT
 
 Tested on:
 * Powercom BNT-800AP
 * Powercom BNT-600AP
+* FSP Knight Pro+ 1K RM
+* FSP Knight Pro+ 2000VA RM
 
 ## Installation
 Installation instructions provided below are for RedHat-family Linux, however it won't be much different for other distros.
@@ -46,13 +51,15 @@ Scanning USB bus.
 	bus = "002"
 ```
 * Configuration section that `nut-scanner` produced shall be added to NUT configuration file `/etc/ups/ups.conf`
-* (Re)start NUT services
+* (Re)start NUT services and enable NUT service to start on boot
 ```
 systemctl restart nut-server
-```
-* Enable NUT service to start on boot
-```
 systemctl enable nut-server
+```
+* If you run NUT 2.8.0+, enable the driver:
+```
+systemctl enable nut-driver-enumerator.service
+systemctl start nut-driver-enumerator.service
 ```
 * Test if `upsc` can connect to UPS and pull the data (assumed that device in `/etc/ups/ups.conf` is named `nutdev1`)
 ```
@@ -87,6 +94,12 @@ ups.productid: 0001
 ups.status: OL
 ups.vendorid: 0d9f
 ```
+* If you do not get the response from UPS then make sure:
+  - Driver is configured correctly
+  - `nut-server.service` is running
+  - You're using correct driver that is able to communicate with the UPS
+
+* Ensure that your Zabbix Agent has directory `/etc/zabbix/zabbix_agentd.conf.d/` included into the configuration
 * Now, let's set up Zabbix Agent. Copy configuration parameters file available in this project to the target location:
 ```
 sudo cp -a ./agent/etc/zabbix/zabbix_agentd.conf.d/powercom_ups_mon.conf /etc/zabbix/zabbix_agentd.conf.d/
